@@ -1,0 +1,102 @@
+# Shared Chromium for friends (Neko) + HTTPS (Caddy) + DuckDNS updater.
+# Secrets and machine-specific values live in .env. See README.md for day-to-day use.
+name: neko
+
+# Cap each container's logs (Docker keeps them forever by default; neko is chatty).
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  neko:
+    logging: *logging
+    image: ghcr.io/m1k1o/neko/chromium:3
+    container_name: neko
+    hostname: neko                  # fixed, so Chromium's profile lock survives container re-creation
+    restart: unless-stopped
+    shm_size: 2gb
+    cap_add:
+      - SYS_ADMIN                   # lets Chromium run its own sandbox (chromium/chromium.conf drops --no-sandbox)
+    depends_on:
+      - ext-host
+    ports:
+      - "127.0.0.1:8090:8080"       # local admin access from this Mac only
+      - "52000:52000/udp"           # WebRTC video/audio
+      - "52000:52000/tcp"           # WebRTC fallback for friends whose network blocks UDP
+    environment:
+      NEKO_DESKTOP_SCREEN: 1280x720@30
+      NEKO_MEMBER_PROVIDER: multiuser
+      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: ${NEKO_ADMIN_PASSWORD}
+      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: ${NEKO_MEMBER_PASSWORD}
+      # Friends: no webcam/mic sharing into the browser, no file transfer. Everything else stays default.
+      NEKO_MEMBER_MULTIUSER_USER_PROFILE: '{"can_share_media":false,"plugins":{"filetransfer.enabled":false}}'
+      NEKO_FILETRANSFER_ENABLED: "false"
+      NEKO_DESKTOP_UPLOAD_DROP: "false"
+      NEKO_WEBRTC_UDPMUX: "52000"
+      NEKO_WEBRTC_TCPMUX: "52000"
+      NEKO_WEBRTC_ICELITE: "true"
+      # Empty = detect the public IP at startup (the ddns service restarts neko when it changes).
+      NEKO_WEBRTC_NAT1TO1: ${NEKO_WEBRTC_NAT1TO1:-}
+      NEKO_SERVER_PROXY: "true"     # sits behind Caddy
+      NEKO_SERVER_METRICS: "false"  # don't publish /metrics to the internet
+      # No pointer baked into the video: the driver's own pointer is instant, and everyone else's page
+      # draws the driver's pointer itself (client-patch/www/cursor.js). Set "true" to go back.
+      NEKO_CAPTURE_VIDEO_SHOW_POINTER: "false"
+    volumes:
+      - chromium-profile:/home/neko/.config/chromium
+      - ./chromium/policies:/etc/chromium/policies/managed:ro
+      - ./chromium/chromium.conf:/etc/neko/supervisord/chromium.conf:ro
+      - ${GTO_EXTENSION_DIR}:/opt/extensions/genesis:ro
+      # Neko page customisation: instant control handover + clearer controls (see client-patch/apply.sh)
+      - ./client-patch/apply.sh:/opt/neko-patches/apply.sh:ro
+      - ./client-patch/client-patch.conf:/etc/neko/supervisord/client-patch.conf:ro
+      - ./client-patch/www:/var/www/custom:ro
+
+  # Serves the guard extension to Chromium so policy can force-install it. Internal only (no ports).
+  ext-host:
+    logging: *logging
+    image: busybox:1.37
+    container_name: neko-ext-host
+    restart: unless-stopped
+    user: "65534:65534"
+    command: ["httpd", "-f", "-p", "8080", "-h", "/srv"]
+    volumes:
+      - ./guard/dist:/srv:ro
+
+  caddy:
+    logging: *logging
+    image: caddy:2
+    container_name: neko-caddy
+    restart: unless-stopped
+    depends_on:
+      - neko
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      NEKO_DOMAIN: ${DUCKDNS_SUBDOMAIN}.duckdns.org
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+  ddns:
+    logging: *logging
+    image: curlimages/curl:latest
+    container_name: neko-ddns
+    restart: unless-stopped
+    user: root                      # needs the Docker socket to restart neko when the public IP changes
+    entrypoint: ["/bin/sh", "/ddns.sh"]
+    environment:
+      DUCKDNS_SUBDOMAIN: ${DUCKDNS_SUBDOMAIN}
+      DUCKDNS_TOKEN: ${DUCKDNS_TOKEN}
+    volumes:
+      - ./ddns/ddns.sh:/ddns.sh:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  chromium-profile:
+  caddy-data:
+  caddy-config:

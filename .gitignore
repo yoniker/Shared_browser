@@ -1,0 +1,9 @@
+# Secrets and machine-specific values: never commit (this repository is public)
+.env
+LOCAL.md
+guard/guard-signing-key.pem
+
+# Large installer and personal Docker settings backup
+installers/
+
+.DS_Store

@@ -1,0 +1,81 @@
+{
+  "DeveloperToolsAvailability": 2,
+  "RemoteDebuggingAllowed": false,
+  "ExtensionDeveloperModeSettings": 1,
+  "ExtensionAllowedTypes": [
+    "extension"
+  ],
+  "ExtensionInstallSources": [],
+  "BlockExternalExtensions": true,
+  "ExtensionSettings": {
+    "pmmhkjgheofnpanjpnlcnifhlicfknma": {
+      "toolbar_pin": "force_pinned"
+    },
+    "mnjpallfhiobadobcdaiofikffmcebmg": {
+      "installation_mode": "force_installed",
+      "update_url": "http://ext-host:8080/updates.xml"
+    }
+  },
+  "URLBlocklist": [
+    "chrome://*",
+    "chrome-untrusted://*",
+    "chrome-search://*",
+    "devtools://*",
+    "view-source:*",
+    "file://*",
+    "javascript://*",
+    "chrome-extension://*",
+    "chromewebstore.google.com",
+    "chrome.google.com/webstore",
+    "clients2.google.com/service/update2/crx",
+    "clients2.googleusercontent.com/crx"
+  ],
+  "URLAllowlist": [
+    "chrome-extension://pmmhkjgheofnpanjpnlcnifhlicfknma/src/popup.html",
+    "chrome-extension://pmmhkjgheofnpanjpnlcnifhlicfknma/src/trainer.html",
+    "chrome-extension://pmmhkjgheofnpanjpnlcnifhlicfknma/vendor/gg-table/table.html",
+    "chrome://history",
+    "chrome://tab-search.top-chrome"
+  ],
+  "PasswordManagerEnabled": false,
+  "PasswordLeakDetectionEnabled": false,
+  "AutofillAddressEnabled": false,
+  "AutofillCreditCardEnabled": false,
+  "BrowserSignin": 0,
+  "SyncDisabled": true,
+  "IncognitoModeAvailability": 1,
+  "BrowserGuestModeEnabled": false,
+  "BrowserAddPersonEnabled": false,
+  "DownloadRestrictions": 3,
+  "PromptForDownloadLocation": false,
+  "AllowFileSelectionDialogs": false,
+  "PrintingEnabled": false,
+  "TaskManagerEndProcessEnabled": false,
+  "UserFeedbackAllowed": false,
+  "SafeBrowsingProtectionLevel": 1,
+  "EditBookmarksEnabled": true,
+  "HideWebStoreIcon": true,
+  "BrowserLabsEnabled": false,
+  "CommandLineFlagSecurityWarningsEnabled": false,
+  "DefaultCookiesSetting": 4,
+  "CookiesAllowedForUrls": [
+    "https://[*.]gtogenesis.com",
+    "chrome-extension://pmmhkjgheofnpanjpnlcnifhlicfknma"
+  ],
+  "HomepageLocation": "https://app.gtogenesis.com/",
+  "ShowHomeButton": true,
+  "RestoreOnStartup": 4,
+  "RestoreOnStartupURLs": [
+    "https://app.gtogenesis.com/"
+  ],
+  "NewTabPageLocation": "about:blank",
+  "DefaultNotificationsSetting": 2,
+  "DefaultPopupsSetting": 2,
+  "AutoplayAllowed": true,
+  "FullscreenAllowed": true,
+  "AudioCaptureAllowed": false,
+  "VideoCaptureAllowed": false,
+  "PromotionalTabsEnabled": false,
+  "PrivacySandboxPromptEnabled": false,
+  "DefaultBrowserSettingEnabled": false
+}

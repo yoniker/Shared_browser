@@ -1,0 +1,22 @@
+{
+	# HTTP/3 would need UDP 443 forwarded too; HTTP/1.1 + HTTP/2 keeps router setup simple.
+	servers {
+		protocols h1 h2
+	}
+}
+
+# NEKO_DOMAIN is set in docker-compose.yml from DUCKDNS_SUBDOMAIN in .env.
+# Caddy gets and renews the Let's Encrypt certificate automatically (needs ports 80 + 443 forwarded).
+{$NEKO_DOMAIN} {
+	encode gzip
+	# Make browsers re-check Neko's page on every visit, so client-patch changes show up at once.
+	header {
+		Cache-Control "no-cache"
+		defer
+	}
+	reverse_proxy neko:8080 {
+		# Neko reads the client IP from these headers; don't let clients spoof them.
+		header_up X-Real-IP {remote_host}
+		header_up -True-Client-IP
+	}
+}

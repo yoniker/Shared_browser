@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "Shared Browser Guard",
+  "version": "1.0.1",
+  "description": "Signs this shared browser out of Google right after a GTO Genesis login, so nobody at the controls can use your Google account.",
+  "permissions": ["cookies", "webRequest"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" }
+}

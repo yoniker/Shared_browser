@@ -1,0 +1,224 @@
+/*
+ * Custom look for Neko's page, loaded after Neko's own stylesheet (see client-patch/apply.sh).
+ * - big, labelled take/release control button with a colour per state
+ * - green frame + "You're in control" while you drive, "DRIVING" tag under the driver's avatar
+ * - admin-only switches hidden from guests; labelled for admins
+ * Selectors follow Neko v3.1.6's markup. If an update changes it, the page falls back to the
+ * stock look. Edit freely: reload the Neko page to see changes (no restart needed).
+ */
+
+:root {
+  --nk-green: #16a34a;
+  --nk-amber: #d97706;
+  --nk-red: #dc2626;
+  --nk-white: #ffffff;
+  --nk-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ---- 1. Take / release control button (bottom bar) ---------------------------------- */
+
+/* nobody driving, or a friend driving: one click takes control */
+#neko .room-menu .controls i.fa-keyboard.request {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-size: 16px !important;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--nk-white) !important;
+  opacity: 1 !important;
+  background: var(--nk-green);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+#neko .room-menu .controls i.fa-keyboard.request:hover {
+  filter: brightness(1.12);
+}
+#neko .room-menu .controls i.fa-keyboard.request::before {
+  content: "\f245"; /* arrow pointer */
+}
+#neko .room-menu .controls i.fa-keyboard.request::after {
+  content: "Take control";
+  font-family: var(--nk-font);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* an admin is driving: others can only ask */
+#neko:has(.members .member.host.admin) .room-menu .controls i.fa-keyboard.request.disabled {
+  background: var(--nk-amber);
+}
+#neko:has(.members .member.host.admin) .room-menu .controls i.fa-keyboard.request.disabled::before {
+  content: "\f256"; /* hand */
+}
+#neko:has(.members .member.host.admin) .room-menu .controls i.fa-keyboard.request.disabled::after {
+  content: "Ask for control";
+}
+
+/* you are driving */
+#neko .room-menu .controls i.fa-keyboard.request:not(.faded):not(.disabled) {
+  background: var(--nk-red);
+}
+#neko .room-menu .controls i.fa-keyboard.request:not(.faded):not(.disabled)::before {
+  content: "\f256"; /* hand */
+}
+#neko .room-menu .controls i.fa-keyboard.request:not(.faded):not(.disabled)::after {
+  content: "Release control";
+}
+
+/* the small "pause my input" switch next to it: rarely needed, and its "Lock Controls"
+   tooltip is easy to confuse with the admin lock */
+#neko .room-menu .controls li:has(> label.switch) {
+  display: none !important;
+}
+
+/* ---- 2. While YOU drive: green frame + label on the video ---------------------------- */
+
+#neko:has(.room-menu .controls i.fa-keyboard.request:not(.faded):not(.disabled)) .video-container .player-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 49;
+  border: 4px solid var(--nk-green);
+  pointer-events: none;
+}
+#neko:has(.room-menu .controls i.fa-keyboard.request:not(.faded):not(.disabled)) .video-container .player-container::after {
+  content: "\25CF  You're in control";
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--nk-green);
+  color: var(--nk-white);
+  font: 700 13px/1 var(--nk-font);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ---- 3. Who is driving: green ring + DRIVING tag on their avatar --------------------- */
+
+#neko .members .member.host .avatar {
+  box-shadow: 0 0 0 3px var(--nk-green);
+}
+#neko .members .member.host::after {
+  content: "DRIVING";
+  font-family: var(--nk-font);
+  font-weight: 800;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  line-height: 1;
+  width: auto;
+  height: auto;
+  padding: 3px 6px;
+  margin: 0;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 4px;
+  background: var(--nk-green);
+  color: var(--nk-white);
+  white-space: nowrap;
+  z-index: 2;
+}
+
+/* ---- 4. Admin switches (top right) --------------------------------------------------- */
+
+/* guests can't use them: hide... */
+#neko .header .menu i.disabled {
+  display: none !important;
+}
+/* ...but tell guests when the admin has locked controls */
+#neko .header .menu i.fa-mouse.disabled.locked {
+  display: inline-flex !important;
+  width: auto;
+  height: auto;
+  line-height: 1;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px !important;
+  color: var(--nk-white) !important;
+  background: var(--nk-amber);
+}
+#neko .header .menu i.fa-mouse.disabled.locked::before {
+  content: "\f023"; /* lock */
+}
+#neko .header .menu i.fa-mouse.disabled.locked::after {
+  content: "Controls locked by admin";
+  font: 700 13px/1 var(--nk-font);
+}
+
+/* admins: label the switches so the mouse icon isn't mistaken for "take control" */
+#neko .header .menu i.fa-mouse:not(.disabled),
+#neko .header .menu i.fa-lock:not(.disabled),
+#neko .header .menu i.fa-lock-open:not(.disabled) {
+  display: inline-flex;
+  width: auto;
+  height: auto;
+  line-height: 1;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px !important;
+  background: rgba(255, 255, 255, 0.08);
+}
+#neko .header .menu i.locked:not(.disabled) {
+  color: var(--nk-white) !important;
+  background: var(--nk-red);
+}
+#neko .header .menu i.fa-mouse:not(.disabled)::after,
+#neko .header .menu i.fa-lock:not(.disabled)::after,
+#neko .header .menu i.fa-lock-open:not(.disabled)::after {
+  font: 700 13px/1 var(--nk-font);
+}
+#neko .header .menu i.fa-mouse:not(.disabled)::after { content: "Lock controls"; }
+#neko .header .menu i.fa-mouse.locked:not(.disabled)::after { content: "Controls locked"; }
+/* (Neko always gives the room switch the closed-padlock class; only .locked tells the real state) */
+#neko .header .menu i.fa-lock:not(.disabled)::after,
+#neko .header .menu i.fa-lock-open:not(.disabled)::after { content: "Lock room"; }
+#neko .header .menu i.fa-lock:not(.locked):not(.disabled)::before { content: "\f3c1"; } /* open padlock */
+#neko .header .menu i.fa-lock.locked:not(.disabled)::after,
+#neko .header .menu i.fa-lock-open.locked:not(.disabled)::after { content: "Room locked"; }
+
+/* phones: shorter */
+@media (max-width: 600px) {
+  #neko .room-menu .controls i.fa-keyboard.request { padding: 8px 14px; }
+  #neko .room-menu .controls i.fa-keyboard.request::after { font-size: 13px; }
+  #neko .header .menu i:not(.disabled)::after { content: none !important; }
+}
+
+/* ---- 5. The driver's pointer, drawn for everyone else (see cursor.js) ------------------ */
+
+#neko .player-container .nk-remote-pointer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 48;
+  pointer-events: none;
+  will-change: transform;
+}
+#neko .player-container .nk-remote-pointer img {
+  display: block;
+}
+#neko .player-container .nk-remote-pointer-tag {
+  position: absolute;
+  left: 100%;
+  top: 100%;
+  margin: -6px 0 0 -4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--nk-green);
+  color: var(--nk-white);
+  font: 700 11px/1.2 var(--nk-font);
+  white-space: nowrap;
+}
+#neko .player-container .nk-remote-pointer-tag:empty {
+  display: none;
+}

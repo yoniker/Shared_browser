@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "test shotter",
+  "version": "1",
+  "description": "Test only: optionally clicks Take control, then saves a screenshot of the page to Downloads/shot.png.",
+  "permissions": ["tabs", "downloads"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "sw.js" },
+  "content_scripts": [{ "matches": ["<all_urls>"], "js": ["c.js"] }]
+}

@@ -1,0 +1,7 @@
+{
+  "manifest_version": 3,
+  "name": "test mover",
+  "version": "1",
+  "description": "Test only: behaves like a driver moving the mouse over Neko's video.",
+  "content_scripts": [{ "matches": ["<all_urls>"], "js": ["m.js"] }]
+}

@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "test probe",
+  "version": "1",
+  "description": "Test only: runs a probe (main.js) in the page and saves document.documentElement.dataset.result to Downloads/result.txt.",
+  "permissions": ["tabs", "downloads", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "sw.js" },
+  "content_scripts": [{ "matches": ["<all_urls>"], "js": ["main.js"], "world": "MAIN", "run_at": "document_start" }]
+}

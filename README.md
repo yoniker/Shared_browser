@@ -11,17 +11,20 @@ a time; you are the only admin.
 | You (admin), on this Mac | http://localhost:8090 | `NEKO_ADMIN_PASSWORD` |
 
 Any display name works; the password decides whether you're a friend or admin.
-**Never share the admin password.** See your passwords with: `grep PASSWORD ~/neko/.env`
+**Never share the admin password.** See your passwords with: `grep PASSWORD ~/Projects/neko/.env`
 
-**Your actual link, passwords and router details are in `LOCAL.md`** (on this Mac only; it's kept out
+**Your actual link, passwords and router details are in `MANUAL.md`** (on this Mac only; it's kept out
 of git together with `.env`, because this repository is public).
 
 ## Start / stop / status
 
-All commands run from `~/neko`:
+Easiest: `./neko.sh` (start), `./neko.sh stop`, `./neko.sh restart`, `./neko.sh status`,
+`./neko.sh passwords`, `./neko.sh manual`, `./neko.sh logs`, `./neko.sh update`.
+
+The same with plain Docker commands, run from `~/Projects/neko`:
 
 ```bash
-cd ~/neko
+cd ~/Projects/neko
 docker compose up -d                 # start everything (also how changes to .env take effect)
 docker compose ps                    # status
 docker compose stop                  # stop everything (stays stopped until you start it)
@@ -74,7 +77,7 @@ and Docker Desktop starts when you log in to the Mac.
 
 ## Change passwords
 
-1. Edit `~/neko/.env` and change `NEKO_MEMBER_PASSWORD` and/or `NEKO_ADMIN_PASSWORD`.
+1. Edit `~/Projects/neko/.env` and change `NEKO_MEMBER_PASSWORD` and/or `NEKO_ADMIN_PASSWORD`.
    New random one: `openssl rand -base64 18`
 2. `docker compose up -d neko` (everyone is disconnected and must log in with the new password).
 
@@ -128,14 +131,14 @@ Known limits (by design or unavoidable):
 
 ## Add or remove blocked URLs
 
-Edit `~/neko/chromium/policies/policies.json` (keep it valid JSON):
+Edit `~/Projects/neko/chromium/policies/policies.json` (keep it valid JSON):
 
 - Block something: add to `"URLBlocklist"`, e.g. `"app.gtogenesis.com/settings"` (path prefix) or
   `"example.com"` (whole site incl. subdomains).
 - Make an exception: add to `"URLAllowlist"`. The more specific rule wins.
 
 Chromium picks up changes within seconds. To be sure, restart Chromium (command above).
-Check the file is valid: `python3 -m json.tool ~/neko/chromium/policies/policies.json >/dev/null && echo ok`
+Check the file is valid: `python3 -m json.tool ~/Projects/neko/chromium/policies/policies.json >/dev/null && echo ok`
 
 Note: GTO Genesis is a single-page app. Blocking one of its paths stops loading that page directly,
 but clicking an in-app link to it can still get there.
@@ -157,7 +160,7 @@ downloads it from the internal-only `ext-host` container (`guard/dist/`). To cha
 code, bump `version` in `guard/extension/manifest.json` and `guard/dist/updates.xml`, then rebuild:
 
 ```bash
-cd ~/neko/guard && docker run --rm -v "$PWD:/guard" --entrypoint /usr/lib/chromium/chromium \
+cd ~/Projects/neko/guard && docker run --rm -v "$PWD:/guard" --entrypoint /usr/lib/chromium/chromium \
   ghcr.io/m1k1o/neko/chromium:3 --no-sandbox --headless=new --pack-extension=/guard/extension \
   --pack-extension-key=/guard/guard-signing-key.pem && mv extension.crx dist/guard.crx && chmod 644 dist/guard.crx
 ```
@@ -174,7 +177,7 @@ Keep `guard/guard-signing-key.pem` private and don't delete it (it defines the g
 - **At home, use http://localhost:8090 on this Mac.** The public link doesn't open from inside your
   home network: the router keeps port 443 for its own admin page. Friends outside are not
   affected. To test like a friend, use a phone on mobile data (Wi-Fi off).
-- **Router** (its admin page, e.g. http://192.168.0.1; exact values in `LOCAL.md`):
+- **Router** (its admin page, e.g. http://192.168.0.1; exact values in `MANUAL.md`):
   - DHCP reservation: this Mac's Wi-Fi MAC address → a fixed local IP. It's the **Wi-Fi** MAC; redo it if
     you switch the Mac to Ethernet.
   - Port forwarding to that fixed IP: TCP 80, TCP 443, TCP/UDP 52000.
@@ -193,17 +196,17 @@ Keep `guard/guard-signing-key.pem` private and don't delete it (it defines the g
 - Version **4.41.2**, the last release that supports macOS 12. **Don't update it** (4.42+ needs
   macOS 13.3). Update checks and auto-downloads are off. Installer: `installers/Docker-4.41.2.dmg`.
 - Limits: 4 CPUs, 6 GB RAM, 1 GB swap, 10 GB disk. Starts at login without opening its window.
-- Only `~/neko` and your extension folder can be mounted into containers. To use Docker for other
+- Only `~/Projects/neko` and your extension folder can be mounted into containers. To use Docker for other
   projects, add their folders under Settings > Resources > File sharing.
 - These settings live in `~/Library/Group Containers/group.com.docker/settings-store.json`
   (original copy: `installers/docker-settings-store.original.json`).
-- Outside `~/neko`, setup changed only Docker itself: `/Applications/Docker.app` plus what its installer
+- Outside `~/Projects/neko`, setup changed only Docker itself: `/Applications/Docker.app` plus what its installer
   adds (privileged helper, `docker` command links in `/usr/local/bin`), its settings file above, and its login item.
 
 ## Updating Neko
 
 ```bash
-cd ~/neko && docker compose pull && docker compose up -d
+cd ~/Projects/neko && docker compose pull && docker compose up -d
 ```
 
 Then re-run the test checklist: a new Chromium version can change how policies behave.
@@ -258,16 +261,20 @@ Test with a friend, or your phone on mobile data (Wi-Fi off), at your link.
 | Log in to some other site | no "save password?" prompt | |
 | Profile menu (avatar, top right) | no Guest / Add profile | |
 
-Re-run the lockdown table after any `docker compose pull` (new Chromium) or policy edit.
+Re-run the lockdown table after any `docker compose pull` (new Chromium) or policy edit. Automated:
+`dev/lockdown-test.sh` and `dev/ui-test.sh` (when nobody is using Neko; see CLAUDE.md).
 
 ## Files
 
 | Path | What |
 |---|---|
+| `neko.sh` | the one script to run it: start/stop/restart/status/passwords/manual/logs/update |
+| `CLAUDE.md` | context for resuming development (decisions, Neko quirks, testing) |
+| `dev/` | test scripts: `lockdown-test.sh` (real shared browser), `ui-test.sh` (throwaway pages) |
 | `docker-compose.yml` | all services: neko, ext-host, caddy, ddns (logs capped at 30 MB each) |
 | `.env` | passwords, extension path, DuckDNS token (private, chmod 600, **not in git**) |
 | `.env.example` | template for `.env` on a fresh copy |
-| `LOCAL.md` | concise manual with your real link, passwords and router details (**not in git**) |
+| `MANUAL.md` | concise manual with your real link, passwords and router details (**not in git**) |
 | `chromium/policies/policies.json` | Chromium lockdown policies |
 | `chromium/chromium.conf` | Chromium launch flags (sandbox on, loads your extension) |
 | `guard/` | guard extension source and packaged CRX (the signing key is **not in git**: back it up privately) |
@@ -277,5 +284,5 @@ Re-run the lockdown table after any `docker compose pull` (new Chromium) or poli
 | `installers/` | Docker installer and original Docker settings |
 
 **Fresh copy of this repository:** copy `.env.example` to `.env` (`chmod 600 .env`) and fill it in, then
-`docker compose up -d`. Secrets (`.env`, `LOCAL.md`, `guard/guard-signing-key.pem`) and `installers/` are
+`docker compose up -d`. Secrets (`.env`, `MANUAL.md`, `guard/guard-signing-key.pem`) and `installers/` are
 listed in `.gitignore` and never pushed.

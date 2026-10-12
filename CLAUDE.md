@@ -57,7 +57,15 @@ Decisions and gotchas, all verified on this Chromium:
   `chrome://extensions` blocked, no downloads, no file dialogs.
 - `--load-extension` still works in Chromium (only branded Chrome 137+ dropped it). The user's extension
   ID inside Neko is `pmmhkjgheofnpanjpnlcnifhlicfknma` (derived from its mount path
-  `/opt/extensions/genesis`).
+  `/opt/extensions/genesis`). New extension version: `./neko.sh reload` (restarts only Chromium via
+  supervisorctl; `chrome://extensions` is blocked for everyone, admin included). Check what's loaded:
+  `extensions.settings.<id>.service_worker_registration_info.version` in the profile's `Preferences`.
+- **Gotcha (Chromium 154):** after an unpacked `--load-extension` extension's files change, a restart
+  does NOT re-register its background service worker: Chromium keeps the old registration and cached
+  script (popup/content scripts are new, background old). Removing the pref record alone, or the whole
+  extension prefs entry, doesn't help; clearing `Default/Service Worker` + every extension's
+  `service_worker_registration_info` before start does (verified in a throwaway container across two
+  upgrades). `chromium/start-chromium.sh` does that on every Chromium start (chromium.conf runs it).
 - `DeveloperToolsAvailability: 2` also kills view-source (menu items show "DevTools not allowed").
 - `URLBlocklist`: `chrome://*` (allowlist: History, tab search), `chrome-untrusted://*`,
   `chrome-search://*`, `devtools://*`, `view-source:*`, `file://*`, `javascript://*` (typed URLs and

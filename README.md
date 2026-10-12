@@ -18,7 +18,7 @@ of git together with `.env`, because this repository is public).
 
 ## Start / stop / status
 
-Easiest: `./neko.sh` (start), `./neko.sh stop`, `./neko.sh restart`, `./neko.sh status`,
+Easiest: `./neko.sh` (start), `./neko.sh stop`, `./neko.sh reload` (new extension version), `./neko.sh restart`, `./neko.sh status`,
 `./neko.sh passwords`, `./neko.sh manual`, `./neko.sh logs`, `./neko.sh update`.
 
 The same with plain Docker commands, run from `~/Projects/neko`:
@@ -149,7 +149,11 @@ but clicking an in-app link to it can still get there.
 `--load-extension` (see `chromium/chromium.conf`). Its ID inside Neko is
 `pmmhkjgheofnpanjpnlcnifhlicfknma` (derived from that path).
 
-- After changing the extension's code: restart Chromium (command above).
+- After changing the extension's code: `./neko.sh reload`. It restarts only Chromium (`chrome://extensions`
+  stays blocked even for you, since policies apply to everyone driving): nobody is disconnected, open
+  tabs close and GTO Genesis reopens, and it confirms which version is running. Chromium would otherwise
+  keep running the extension's old background code; `chromium/start-chromium.sh` clears that on every
+  Chromium start, so restarts and reboots also pick up new code.
 - If the extension gains a new page that opens in a tab or iframe, add it to `"URLAllowlist"` as
   `chrome-extension://pmmhkjgheofnpanjpnlcnifhlicfknma/<path>.html`.
 
@@ -277,6 +281,7 @@ Re-run the lockdown table after any `docker compose pull` (new Chromium) or poli
 | `MANUAL.md` | concise manual with your real link, passwords and router details (**not in git**) |
 | `chromium/policies/policies.json` | Chromium lockdown policies |
 | `chromium/chromium.conf` | Chromium launch flags (sandbox on, loads your extension) |
+| `chromium/start-chromium.sh` | Chromium start script: clears stale extension background-script registrations first |
 | `guard/` | guard extension source and packaged CRX (the signing key is **not in git**: back it up privately) |
 | `caddy/Caddyfile` | HTTPS reverse proxy |
 | `client-patch/` | Neko page customisation: instant handover (`apply.sh`), look (`www/ui.css`), shared pointer (`www/cursor.js`) |

@@ -48,6 +48,7 @@ services:
       - chromium-profile:/home/neko/.config/chromium
       - ./chromium/policies:/etc/chromium/policies/managed:ro
       - ./chromium/chromium.conf:/etc/neko/supervisord/chromium.conf:ro
+      - ./chromium/start-chromium.sh:/opt/neko-patches/start-chromium.sh:ro
       - ${GTO_EXTENSION_DIR}:/opt/extensions/genesis:ro
       # Neko page customisation: instant control handover + clearer controls (see client-patch/apply.sh)
       - ./client-patch/apply.sh:/opt/neko-patches/apply.sh:ro

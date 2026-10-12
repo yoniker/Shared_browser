@@ -3,7 +3,9 @@
 #
 #   ./neko.sh              start everything (starts Docker Desktop first if needed)
 #   ./neko.sh stop         stop everything
-#   ./neko.sh restart      restart the shared browser (everyone reconnects)
+#   ./neko.sh reload       load a new version of your extension (restarts only the browser inside
+#                          Neko: nobody is disconnected; open tabs close, GTO Genesis reopens)
+#   ./neko.sh restart      restart the whole Neko container (everyone reconnects)
 #   ./neko.sh status       containers, link, who is connected
 #   ./neko.sh passwords    show the admin and friend passwords
 #   ./neko.sh manual       show the quick manual (MANUAL.md)
@@ -47,6 +49,20 @@ start)
 stop)
 	docker compose stop
 	;;
+reload)
+	# Restart only Chromium; its start script (chromium/start-chromium.sh) clears stale extension
+	# background-script registrations, so your extension's current code runs.
+	want=$(/usr/bin/python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$(env_get GTO_EXTENSION_DIR)/manifest.json")
+	docker exec neko supervisorctl -c /etc/neko/supervisord.conf restart chromium >/dev/null
+	echo "Reloading your extension v$want (open tabs close, GTO Genesis reopens)..."
+	got=""
+	for _ in $(seq 1 20); do
+		sleep 3
+		got=$(docker exec neko python3 -c 'import json; s = json.load(open("/home/neko/.config/chromium/Default/Preferences"))["extensions"]["settings"].get("pmmhkjgheofnpanjpnlcnifhlicfknma", {}); print(s.get("service_worker_registration_info", {}).get("version", ""))' 2>/dev/null || true)
+		[ "$got" = "$want" ] && break
+	done
+	if [ "$got" = "$want" ]; then echo "Done: v$got is running."; else echo "Not confirmed yet (Chromium reports '${got:-nothing}'). Run ./neko.sh reload again."; fi
+	;;
 restart)
 	docker compose restart neko
 	;;
@@ -71,7 +87,7 @@ update)
 	echo "Updated. Re-run the checks: dev/lockdown-test.sh and dev/ui-test.sh (see CLAUDE.md)."
 	;;
 *)
-	sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+	sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'
 	exit 1
 	;;
 esac
